@@ -416,19 +416,19 @@ Game.prototype.Draw = function()
 	{
 		canvasCtx.fillStyle = "purple";
 		canvasCtx.font = "30px Georgia";
-		canvasCtx.fillText("End of the alpha build...", canvas.width/2 - 400, canvas.height/2 - 100);
-		canvasCtx.fillText("I guess that means you win...", canvas.width/2 - 400, canvas.height/2);
-		canvasCtx.fillText("...for now...", canvas.width/2 - 400, canvas.height/2 + 100);
+		canvasCtx.fillText("End of the alpha build...", canvas.width/4, canvas.height/2 - 100);
+		canvasCtx.fillText("I guess that means you win...", canvas.width/4, canvas.height/2);
+		canvasCtx.fillText("...for now...", canvas.width/4, canvas.height/2 + 100);
 		
 	}
 	else if(game.gameState == game.states.Loss)
 	{
 		canvasCtx.fillStyle = "purple";
 		canvasCtx.font = "30px Georgia";
-		canvasCtx.fillText("You went insane, your body was found lifeless on the street at 6:23a.m", canvas.width/2 - 400, canvas.height/2 - 200);
-		canvasCtx.fillText("by an office worker on their daily commute.", canvas.width/2 - 400, canvas.height/2 - 100);
-		canvasCtx.fillText("Assumed suicide.", canvas.width/2 - 400, canvas.height/2);
-		canvasCtx.fillText("You Lose.", canvas.width/2 - 400, canvas.height/2 + 100);
+		canvasCtx.fillText("You went insane, your body was found lifeless on the street at 6:23a.m", canvas.width/4, canvas.height/2 - 200);
+		canvasCtx.fillText("by an office worker on their daily commute.", canvas.width/4, canvas.height/2 - 100);
+		canvasCtx.fillText("Assumed suicide.", canvas.width/4, canvas.height/2);
+		canvasCtx.fillText("You Lose.", canvas.width/24, canvas.height/2 + 100);
 	}
 	else if(game.gameState == game.states.Menu)
 	{
@@ -440,7 +440,7 @@ Game.prototype.Draw = function()
 			{
 				canvasCtx.fillStyle = "white";
 			}
-			canvasCtx.fillText(game.menuStates[i], 0, canvas.height/2 - GAMESIZE + (GAMESIZE * 2 * i));			
+			canvasCtx.fillText(game.menuStates[i], GAMESIZE * 4, GAMESIZE * 3 + (GAMESIZE * 2 * i));			
 		}					
 	}
 	else if(game.gameState == game.states.HowTo)
