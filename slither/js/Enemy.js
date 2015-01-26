@@ -38,7 +38,7 @@ Enemy.prototype.onSight = function(inSight)
 
 Enemy.prototype.Update = function(playerPos, playerDir, sanity, pickUpCount, whisperSound, mapSize)
 {
-	if(pickUpCount > 0)
+	if(game.flashlight.darkValue > 0.8)
 	{
 		if(this.spawn == false)
 		{
@@ -108,6 +108,15 @@ Enemy.prototype.Update = function(playerPos, playerDir, sanity, pickUpCount, whi
 			}			
 		
 		}
+	}
+	else
+	{
+		if(this.position.x > -GAMESIZE*5 || this.position.x > -GAMESIZE*5)
+		{
+			this.position.x -= velocity.x;
+			this.position.y -= velocity.y;
+		}
+		this.spawn == false;
 	}
 }
 

@@ -260,7 +260,7 @@ Player.prototype.sanityCheck = function(enemySeen, enemyAttack)
 }
 Player.prototype.CheckLoss = function()
 {
-	if(this.sanity <= 0)
+	if(this.sanity <= 0 || this.hunger <= 0 || this.thirst <= 0)
 	{
 		return true;
 	}
