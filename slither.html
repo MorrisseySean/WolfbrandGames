@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cs" lang="cs">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cs" lang="cs">	
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <meta http-equiv="content-language" content="cs" />
@@ -13,7 +13,7 @@
     <link href="css/msie.css" type="text/css" rel="stylesheet" media="screen,projection" />
     <![endif]-->
     <link rel="stylesheet" media="print" type="text/css" href="css/print.css" />
-
+	<link href="canvas.css" rel="stylesheet" type="text/css">
     <title>Wolfbrand Games</title>
   </head>
   <body>
@@ -30,20 +30,39 @@
       
       <div id="nav" class="box">
         <ul>
-			<li><a href="/">Home<br /><span>Main page</span></a></li>
-			<li><a href="/">Blog<br /><span>My Work</span></a></li>
-			<li><a href="/">Slither<br /><span>2 Dimensional Horror</span></a></li>
-			<li><a href="/">Button Beats<br /><span>Beats For Windows Phone</span></a></li>
-			<li><a href="/">Contact<br /><span>Infomation here!</span></a></li>
+			<li><a href="index.html">Home<br /><span>Main page</span></a></li>
+			<li><a href="blog.html">Blog<br /><span>My Work</span></a></li>
+			<li><a href="slither.html">Slither<br /><span>2 Dimensional Horror</span></a></li>
+			<li><a href="buttonbeats.html">Button Beats<br /><span>Beats For Windows Phone</span></a></li>
+			<li><a href="contact.html">Contact<br /><span>Infomation here!</span></a></li>
 		</ul>
         <hr class="noscreen" />
-      </div> 
+      </div>
         
       <div id="container" class="box">
-      
-        <div id="obsah" class="content box">
-        </div>
-      
+		<div id="slitherText">
+		Slither is my fourth year project. The game aims to give a 2D horror game experience by using sound and limiting vision. The game will soon be able to use a PIP stress monitor to add another level of play to the game. Eventually multiplayer and leaderboards will be implemented. How long can you survive?<br><br> 
+		</div>
+        <div id="slitherDiv">
+			<script src='http://ajax.aspnetcdn.com/ajax/mobileservices/MobileServices.Web-1.1.2.min.js'></script>
+			<script src="slither/lib/util.js"></script>
+			<script src="slither/lib/KeyController.js"></script>
+			<script src="slither/js/Game.js"></script>
+			<script src="slither/js/Main.js"></script>
+			<script src="slither/js/Player.js"></script>
+			<script src="slither/js/Enemy.js"></script>
+			<script src="slither/js/GameManager.js"></script>
+			<script src="slither/js/AudioManager.js"></script>
+			<script src="slither/js/Camera.js"></script>
+			<script src="slither/js/Vector2.js"></script>
+			<script src="slither/js/Sprite.js"></script>
+			<script src="slither/js/PickUp.js"></script>
+			<script src="slither/js/Building.js"></script>
+			<script src="slither/js/Flashlight.js"></script>
+			<script src="slither/js/TriggerSystem.js"></script>
+			<script src="slither/js/Tutorial.js"></script>			
+			<body onload = "main('slitherDiv');">
+        </div>      
       </div>
         
         <div id="footer">
