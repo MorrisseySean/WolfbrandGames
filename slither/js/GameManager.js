@@ -219,7 +219,7 @@ function Node(wall)
 GameManager.prototype.Update = function()
 {
 	//If there's a small amount of food and water on the map, spawn another set of items
-	if(this.waterCount < 2 && this.foodCount < 2)
+	if(this.waterCount < 3 || this.foodCount < 2)
 	{
 		for(var i = 0; i < this.map.length; i++)
 		{

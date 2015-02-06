@@ -144,7 +144,7 @@ Flashlight.prototype.timeLapse = function()
 	//If the time is turning to night, keep increasing the darkness value until a threshold.
 	if(this.night == true)
 	{
-		if(this.darkValue < 1.25)	
+		if(this.darkValue < 1.5)	
 			this.darkValue += 1/90;//this.darkValue += 1/60;
 		else
 			this.night = false;
@@ -152,7 +152,7 @@ Flashlight.prototype.timeLapse = function()
 	//If the time is turning to day, keep decreasing the darkness to a threshold
 	else if(this.night == false)
 	{
-		if(this.darkValue > -0.25)
+		if(this.darkValue > -0.2)
 			this.darkValue -= 1/90;
 		else
 			this.night = true;		

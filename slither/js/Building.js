@@ -22,7 +22,7 @@ Building.prototype.GeneratePickUps = function()
 				var rand = Math.floor(Math.random() * 2);
 				if(rand == 0 && this.hasWater == false)
 				{		
-					if(PickUpRoll(50) == true)
+					if(PickUpRoll(40) == true)
 					{
 						maps.waterArray[maps.waterArray.length] = new PickUp(0, 0, "water", this.size/2);
 						maps.waterArray[maps.waterArray.length - 1].Place(this.position.x + (j * this.size), this.position.y + (i * this.size), this.size, this.size);
@@ -33,7 +33,7 @@ Building.prototype.GeneratePickUps = function()
 				}
 				else if(rand == 1 && this.hasFood == false)
 				{
-					if(PickUpRoll(75) == true)
+					if(PickUpRoll(60) == true)
 					{
 						maps.foodArray[maps.foodArray.length] = new PickUp(0, 0, "food", this.size/2);
 						maps.foodArray[maps.foodArray.length - 1].Place(this.position.x + (j * this.size), this.position.y + (i * this.size), this.size, this.size);
