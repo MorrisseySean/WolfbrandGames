@@ -6,6 +6,9 @@ function Building(x, y, size, building)
 	this.building = building;
 	this.lightswitch = false;
 	this.walls = [];
+	this.resource = 0;
+	this.hasWater = false;
+	this.hasFood = false;
 }
 
 Building.prototype.GeneratePickUps = function()
@@ -16,39 +19,61 @@ Building.prototype.GeneratePickUps = function()
 		{
 			if(this.building[i][j] == 2)
 			{
-				var placed = false;
-				for(var k = 0; k < maps.waterArray.length; k++)
-				{
-					if(placed == false)
+				var rand = Math.floor(Math.random() * 2);
+				if(rand == 0 && this.hasWater == false)
+				{		
+					if(PickUpRoll(50) == true)
 					{
-						if(Math.floor(Math.random() * 2) == 1)
-						{
-							if(maps.waterArray[k].placed == false)
-							{
-								maps.waterArray[k].Place(this.position.x + (j * this.size), this.position.y + (i * this.size), this.size, this.size);			
-								placed = true;
-							}
-						}
-						else
-						{
-							if(maps.foodArray[k].placed == false)
-							{
-								maps.foodArray[k].Place(this.position.x + (j * this.size), this.position.y + (i * this.size), this.size, this.size);			
-								placed = true;
-							}
-						}
+						maps.waterArray[maps.waterArray.length] = new PickUp(0, 0, "water", this.size/2);
+						maps.waterArray[maps.waterArray.length - 1].Place(this.position.x + (j * this.size), this.position.y + (i * this.size), this.size, this.size);
+						maps.waterCount++;
+						this.hasWater = true;
+						console.log("Water");
+					}					
+				}
+				else if(rand == 1 && this.hasFood == false)
+				{
+					if(PickUpRoll(75) == true)
+					{
+						maps.foodArray[maps.foodArray.length] = new PickUp(0, 0, "food", this.size/2);
+						maps.foodArray[maps.foodArray.length - 1].Place(this.position.x + (j * this.size), this.position.y + (i * this.size), this.size, this.size);
+						maps.foodCount++;
+						this.hasFood = true;
+						console.log("Food");
 					}
 				}
 			}			
 			else if(this.building[i][j] > 4 && this.building[i][j] < 20)
 			{
-				maps.pickups[this.building[i][j] - 5].Place(this.position.x + (j * this.size), this.position.y + (i * this.size), this.size, this.size);
+				if(PickUpRoll(50) == true)
+				{
+					maps.pickups[this.building[i][j] - 5].Place(this.position.x + (j * this.size), this.position.y + (i * this.size), this.size, this.size);
+				}
 			}
 			
 		}
 	}
 }
 
+Building.prototype.PlaceFlashlight = function()
+{
+	for(var i = 0; i < this.building.length; i++)
+	{
+		for(var j = 0; j < this.building[0].length; j++)
+		{
+			if(this.building[i][j] == 10)
+			{
+				maps.pickups[this.building[i][j] - 5].Place(this.position.x + (j * this.size), this.position.y + (i * this.size), this.size, this.size);
+			}
+		}
+	}
+}
+Building.prototype.ResetPickups = function()
+{
+	this.hasWater = false;
+	this.hasFood = false;
+	this.resource = 0;
+}
 Building.prototype.GenerateBuilding = function(triggers)
 {
 	for(var i = 0; i < this.building.length; i++)
@@ -87,7 +112,7 @@ Building.prototype.GetWalls = function(pos, walls)
 	}	
 	return walls;
 }
-Building.prototype.Draw = function(offsetX, offsetY)
+Building.prototype.Draw = function()
 {
 	//Draw the ground sprites
 	for(var i = 0; i < this.building.length; i++)
@@ -96,18 +121,18 @@ Building.prototype.Draw = function(offsetX, offsetY)
 		{
 			if(this.building[i][j] < 1)
 			{
-				IMAGE.GROUNDSPRITE.draw(new Vector2((this.position.x + (j * this.size)) - offsetX, (this.position.y + (i * this.size)) - offsetY));	
+				IMAGE.GROUNDSPRITE.draw(new Vector2((this.position.x + (j * this.size)), (this.position.y + (i * this.size))));	
 			}	
 			else 
 			{
-				IMAGE.FLOORSPRITE.draw(new Vector2((this.position.x + (j * this.size)) - offsetX, (this.position.y + (i * this.size)) - offsetY));				
+				IMAGE.FLOORSPRITE.draw(new Vector2((this.position.x + (j * this.size)), (this.position.y + (i * this.size))));				
 			}
 		}
 	}
 	//Draw walls
 	for(var i = 0; i < this.walls.length; i++)
 	{		
-		this.walls[i].draw(offsetX, offsetY);		
+		this.walls[i].draw();		
 	}	
 }
 
@@ -120,7 +145,7 @@ Building.prototype.DrawLights = function(offsetX, offsetY)
 		{
 			if(this.building[i][j] > 1)
 			{
-				IMAGE.FLOORSPRITE.draw(new Vector2((this.position.x + (j * this.size)) - offsetX, (this.position.y + (i * this.size)) - offsetY));	
+				IMAGE.FLOORSPRITE.draw(new Vector2((this.position.x + (j * this.size)), (this.position.y + (i * this.size))));	
 			}
 		}
 	}
@@ -143,13 +168,14 @@ Wall.prototype.setVisible = function(visible)
 
 Wall.prototype.draw = function(offsetX, offsetY)
 {	
-	this.image.draw(new Vector2(this.position.x - offsetX, this.position.y - offsetY));	
+	this.image.draw(new Vector2(this.position.x, this.position.y));	
 }
 
-function Door(x, y, width, height, dir)
+function PickUpRoll(ran)
 {
-	this.position = new Vector2(x, y);
-	this.width = width;
-	this.height = height;
-	this.visible = true;
+	if(Math.floor(Math.random() * ran) == 1)//One in "ran" chance of the object being placed in this position
+	{
+		return true;
+	}
+	return false;
 }

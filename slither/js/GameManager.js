@@ -11,9 +11,12 @@ function GameManager()
 	this.pickups = [];
 	this.waterArray = [];
 	this.foodArray = [];
+	this.pathNodes = [];
 	this.triggers = [];
 	this.mapWidth = 0;
 	this.mapHeight = 0;
+	this.waterCount = 0;
+	this.foodCount = 0;
 }
 
 GameManager.prototype.init = function(size)
@@ -25,25 +28,10 @@ GameManager.prototype.init = function(size)
 	{
 		this.pickups[this.pickups.length] = this.pills = new PickUp(0, 0, "pills", this.size/2);
 		this.pickups[this.pickups.length] = this.battery = new PickUp(0, 0, "battery", this.size/2);
-		//this.pickups[this.pickups.length] = this.food = new PickUp(0, 0, "food", this.size/2);
-		this.pickups[this.pickups.length] = this.bandage = new PickUp(0, 0, "bandage", this.size/2);
+		this.pickups[this.pickups.length] = this.glowtube = new PickUp(0, 0, "glowtube", this.size/2);
 		this.pickups[this.pickups.length] = this.lighter = new PickUp(0, 0, "lighter", this.size/2);
-		//this.pickups[this.pickups.length] = this.water = new PickUp(0, 0, "water", this.size/2);
-	}
-	
-	if(this.waterArray.length == 0)
-	{
-		for(var i = 0; i < 4; i++)
-		{
-			this.waterArray[this.waterArray.length] = new PickUp(0, 0, "water", this.size/2);			
-		}		
-	}
-	if(this.foodArray.length == 0)
-	{
-		for(var i = 0; i < 4; i++)
-		{
-			this.foodArray[this.foodArray.length] = new PickUp(0, 0, "food", this.size/2);
-		}	
+		this.pickups[this.pickups.length] = this.runners = new PickUp(0, 0, "runners", this.size/2);
+		this.pickups[this.pickups.length] = this.flashlight = new PickUp(0, 0, "flashlight", this.size/2);
 	}
 	
 	for(var i = 0; i < this.pickups.length; i++)
@@ -110,9 +98,9 @@ GameManager.prototype.init = function(size)
 	this.building[3] = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 						[0, 1, 1, 2, 1, 1, 1, 1, 1, 0],
 						[0, 1, 2, 2, 2, 2, 2, 2, 1, 0],
-						[0, 1, 2, 1, 1, 1, 2, 2, 1, 0],
-						[0, 1, 2, 2, 1, 1, 2, 2, 1, 0],
-						[0, 1, 2, 2, 2, 1, 1, 2, 1, 0],
+						[0, 1, 2, 1, 1, 7, 2, 2, 1, 0],
+						[0, 1, 2, 2, 1, 1, 9, 2, 1, 0],
+						[0, 1, 2, 2, 9, 1, 1, 2, 1, 0],
 						[0, 1, 2, 1, 2, 2, 1, 2, 1, 0],
 						[0, 1, 2, 2, 2, 2, 2, 2, 1, 0],
 						[0, 1, 1, 1, 1, 1, 2, 1, 1, 0],
@@ -131,7 +119,7 @@ GameManager.prototype.init = function(size)
 						
 	this.building[5] = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 						[0, 1, 1, 1, 1, 1, 2, 1, 1, 0],
-						[0, 1, 2, 2, 2, 2, 2, 2, 1, 0],
+						[0, 1, 9, 2, 2, 2, 2, 9, 1, 0],
 						[0, 1, 2, 1, 2, 1, 2, 1, 1, 0],
 						[0, 2, 2, 2, 8, 2, 7, 2, 1, 0],
 						[0, 1, 1, 7, 1, 8, 1, 2, 1, 0],
@@ -142,7 +130,7 @@ GameManager.prototype.init = function(size)
 						
 	this.building[6] = 	[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],						
 						[0, 1, 1, 1, 123, 123, 1, 1, 1, 0],
-						[0, 1, 2, 2, 2, 2, 2, 125, 1, 0],
+						[0, 1, 2, 2, 2, 2, 10, 125, 1, 0],
 						[0, 1, 1, 1, 1, 1, 1, 2, 1, 0],
 						[0, 1, 2, 2, 2, 2, 1, 2, 1, 0],
 						[0, 1, 2, 1, 2, 2, 1, 2, 1, 0],
@@ -164,6 +152,7 @@ GameManager.prototype.GenerateMap = function(player)
 			{	//Make the central building the starting building				
 				this.map[j][i] = new Building(j * this.size * this.building[0].length, i * this.size * this.building[0].length, this.size, this.building[6]);
 				player.setPos((j * this.size * this.building[0].length) + (this.size * (this.building[0].length/2)), i * this.size * this.building[0].length + (this.size * (this.building[0].length/2)));
+				this.map[j][i].PlaceFlashlight();
 			}
 			else
 			{	//Place a random building							
@@ -171,7 +160,7 @@ GameManager.prototype.GenerateMap = function(player)
 			}
 		}
 	}	
-	//Load the buildings into an array
+	//Generate the buildings and the first round of pickups.
 	for(var i = 0; i < this.map.length; i++)
 	{
 		for(var j = 0; j < this.map[i].length; j++)
@@ -193,9 +182,62 @@ GameManager.prototype.GenerateMap = function(player)
 	{
 		if(this.pickups[i].getPlaced() == true){output++}
 	}
-	console.log(output);		
+	console.log(output);
+	this.GenerateNodes();
 }
 
+//====================Pathfinding methods=========================================//
+
+GameManager.prototype.GenerateNodes = function()
+{
+	for(var i = 0; i < (this.map.length * this.building[0].length); i++)
+	{
+		this.pathNodes[i] = [];
+		for(var j = 0; j < (this.map.length * this.building[0].length); j++)
+		{ 
+		   var curMap = this.map[Math.floor(i/this.building[0].length)][Math.floor(j/this.building[0].length)]
+		   if(curMap.building[j%this.building[0].length][i%this.building[0].length] == 1)
+		   {
+				this.pathNodes[i][j] = 1;
+		   }
+		   else
+		   {
+				this.pathNodes[i][j] = 0;
+		   }
+		}
+	}
+}
+
+function Node(wall)
+{
+	this.parent = 0;
+	this.dist = 0;
+	this.blocked = wall;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+GameManager.prototype.Update = function()
+{
+	//If there's a small amount of food and water on the map, spawn another set of items
+	if(this.waterCount < 2 && this.foodCount < 2)
+	{
+		for(var i = 0; i < this.map.length; i++)
+		{
+			for(var j = 0; j < this.map[i].length; j++)
+			{
+				if(j != Math.floor(this.map.length/2) || i != Math.floor(this.map[j].length/2))
+				{
+					this.map[j][i].ResetPickups();
+					this.map[j][i].GeneratePickUps();
+				}
+			}
+		}
+	}	
+	//Check the trigger collision on the map
+	this.checkTriggers(game.player.position);	
+	//Check collision with items on the map
+	this.PickUpItems();
+}
 
 GameManager.prototype.Draw = function(offsetX, offsetY)
 {
@@ -210,29 +252,7 @@ GameManager.prototype.Draw = function(offsetX, offsetY)
 	//Draw pickups if they are placed on the map
 	for(var k = 0; k < this.pickups.length; k++)
 	{
-		if(this.pickups[k].getPlaced() && this.pickups[k].pickedUp == false)
-		{
-			this.pickups[k].Draw(offsetX, offsetY);
-		}
-	}
-}
-
-GameManager.prototype.DrawLights = function(offsetX, offsetY){	
-	//Calls the draw function for the buildings with the required position based off of the map array
-	for(var i = 0; i < this.map.length; i++)
-	{
-		for(var j = 0; j < this.map.length; j++)
-		{
-			if(this.map[i][j].lightswitch == true)
-			{
-				this.map[i][j].DrawLights(offsetX, offsetY);
-			}
-		}
-	}
-	
-	for(var k = 0; k < this.pickups.length; k++)
-	{
-		if(this.pickups[k].getPlaced() && this.pickups[k].pickedUp == false)
+		if(this.pickups[k].getPlaced())
 		{
 			this.pickups[k].Draw(offsetX, offsetY);
 		}
@@ -251,30 +271,43 @@ GameManager.prototype.DrawLights = function(offsetX, offsetY){
 			this.foodArray[k].Draw(offsetX, offsetY);
 		}
 	}
-	
 }
 
-GameManager.prototype.DrawHUD = function()
-{	//Draws HUD elements
+GameManager.prototype.DrawLights = function(offsetX, offsetY){	
+	//Calls the draw function for the buildings with the required position based off of the map array
+	for(var i = 0; i < this.map.length; i++)
+	{
+		for(var j = 0; j < this.map.length; j++)
+		{
+			if(this.map[i][j].lightswitch == true)
+			{
+				this.map[i][j].DrawLights(offsetX, offsetY);
+			}
+		}
+	}	
 	for(var k = 0; k < this.pickups.length; k++)
 	{
-		if(this.pickups[k].getPlaced() && this.pickups[k].pickedUp == true)
+		this.pickups[k].infoDraw();
+		if(this.pickups[k].getPlaced() && this.pickups[k].pickedUp == false)
 		{
-			this.pickups[k].PickUpDraw();
+			//this.pickups[k].Draw(offsetX, offsetY);
+		}
+	}
+	for(var k = 0; k < this.waterArray.length; k++)
+	{
+		if(this.waterArray[k].getPlaced() && this.waterArray[k].pickedUp == false)
+		{
+			//this.waterArray[k].Draw(offsetX, offsetY);
+		}
+	}
+	for(var k = 0; k < this.foodArray.length; k++)
+	{
+		if(this.foodArray[k].getPlaced() && this.foodArray[k].pickedUp == false)
+		{
+			//this.foodArray[k].Draw(offsetX, offsetY);
 		}
 	}
 	
-	//Draw sanity bar
-	canvasCtx.fillStyle = rgb(100, 0, 100);
-	canvasCtx.fillRect(GAMEWIDTH - (GAMESIZE * 5), 10, (GAMESIZE * 4) * game.player.sanity/100, 20);
-	
-	//Draw hunger bar
-	canvasCtx.fillStyle = rgb(100, 50, 50);
-	canvasCtx.fillRect(GAMEWIDTH - (GAMESIZE * 5), 35, (GAMESIZE * 4) * game.player.hunger/100, 20);
-	
-	//Draw thirst bar
-	canvasCtx.fillStyle = rgb(10, 10, 100);
-	canvasCtx.fillRect(GAMEWIDTH - (GAMESIZE * 5), 60, (GAMESIZE * 4) * game.player.thirst/100, 20);
 }
 
 GameManager.prototype.CheckWin = function()
@@ -381,19 +414,19 @@ GameManager.prototype.DetectWallCollision = function(pos, size)
 	return pos;
 }
 
-GameManager.prototype.PickUpItems = function(pos, size, sound)
+GameManager.prototype.PickUpItems = function()
 {	//Collision detection for a player and an item	
 	for(var i = 0; i < this.pickups.length; i++)
 	{
 		if(this.pickups[i].getPlaced() == true)
 		{
-			if(Collides(pos, this.pickups[i].getPos(), this.size) == true)
+			if(Collides(game.player.position, this.pickups[i].getPos(), this.size) == true)
 			{
 				if(this.pickups[i].pickedUp == false)
 				{
 					//If the two collide, set the pickup to be picked up.
 					this.pickups[i].PickedUp();
-					playSound(sound);
+					playSound(game.sounds.zipper);
 				}
 			}
 		}
@@ -402,13 +435,13 @@ GameManager.prototype.PickUpItems = function(pos, size, sound)
 	{
 		if(this.waterArray[i].getPlaced() == true)
 		{
-			if(Collides(pos, this.waterArray[i].getPos(), this.size) == true)
+			if(Collides(game.player.position, this.waterArray[i].getPos(), this.size) == true)
 			{
 				if(this.waterArray[i].pickedUp == false)
 				{
 					//If the two collide, set the pickup to be picked up.
 					this.waterArray[i].PickedUp();
-					playSound(sound);
+					playSound(game.sounds.zipper);
 				}
 			}
 		}
@@ -417,13 +450,13 @@ GameManager.prototype.PickUpItems = function(pos, size, sound)
 	{
 		if(this.foodArray[i].getPlaced() == true)
 		{
-			if(Collides(pos, this.foodArray[i].getPos(), this.size) == true)
+			if(Collides(game.player.position, this.foodArray[i].getPos(), this.size) == true)
 			{
 				if(this.foodArray[i].pickedUp == false)
 				{
 					//If the two collide, set the pickup to be picked up.
 					this.foodArray[i].PickedUp();
-					playSound(sound);
+					playSound(game.sounds.zipper);
 				}
 			}
 		}
@@ -451,7 +484,7 @@ GameManager.prototype.GetPickUpCount = function(){
 	return count;
 }
 
-GameManager.prototype.checkTriggers = function(pos, size){
+GameManager.prototype.checkTriggers = function(pos){
 	//Collision detection for a player and a tutorial trigger
 	for(var i = 0; i < this.triggers.length; i++){
 		dx = pos.x - (this.triggers[i].position.x + this.size/2);

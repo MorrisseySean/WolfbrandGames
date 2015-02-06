@@ -26,9 +26,9 @@ AudioManager.prototype.Update = function(playerPos, playerDir, enemyPos)
 {
 	//Use the player position to create ambient sound based on position
 	if(enemyPos.x > 0 && enemyPos.y > 0)
-	audioCtx.listener.setPosition((playerPos.x - enemyPos.x)/500, 0,(-(playerPos.y - enemyPos.y)/500));
-	else
-	audioCtx.listener.setPosition(playerPos.x/500, 0, -playerPos.y/500);
+	{
+		audioCtx.listener.setPosition((playerPos.x - enemyPos.x)/500, 0,(-(playerPos.y - enemyPos.y)/500));
+	}
 }
 
 function playSound(obj)

@@ -14,16 +14,19 @@ function Game()
 	//Initialise tutorial
 	this.tutorial = new Tutorial();
 	
+	//Start PIPManager
+	this.PIP = new PIPManager();
+	
 	//Sets up the camera
 	this.cam = new Camera();
 	
 	//Game states
-	this.states = { Paused : 0, Playing : 1, Win : 2, Loss : 3, Menu : 4, HowTo : 5, Note : 6};
+	this.states = { Paused : 0, Playing : 1, Win : 2, Loss : 3, Menu : 4, HowTo : 5, ConnectToPip : 6};
 	this.gameState = this.states.Menu;
 	
 	//Menu states
 	this.menuSelect = 0;
-	this.menuStates = ["Play", "How To Play", "Survey", "BugReport"];	
+	this.menuStates = ["Play", "How To Play", "Connect To PIP", "Survey", "BugReport"];	
 	
 	//Set up key map
 	this.keys = {};
@@ -33,9 +36,12 @@ function Game()
 	
 	//Time looping variables
 	this.time = (new Date).getTime();
+	this.curTime = (new Date).getTime();
 	this.secTime = (new Date).getTime();
+	this.timeElapsed = 0;
 	this.fps = 0;
 	this.fpsPrint = 0;
+	this.runTime = 0;
 	
 	//Sound data and parameters to be used for each sound.
 	this.audio;
@@ -110,19 +116,20 @@ Game.prototype.initCanvas = function(id)
 	//Create canvas and attach it to the file.
 	canvas = document.createElement('canvas');
 	canvasCtx = canvas.getContext('2d');
+	
 	//document.body.appendChild(canvas);
 	//Set canvas size
-	canvas.width = GAMEWIDTH;
-	canvas.height = GAMEHEIGHT;
+	canvas.width = GAMEWIDTH ;
+	canvas.height = GAMEHEIGHT ;
 	//Add a listener for key presses and releases
 	canvas.addEventListener("keydown", onKeyPress, true);
 	canvas.addEventListener("keyup", onKeyUp, true);
 	document.addEventListener("resize", onResize, true);
 	//Set tab index to 0 and set focus on canvas
 	canvas.setAttribute('tabindex', '0');
+	//canvas.focus();
 	div = document.getElementById(id);
 	div.appendChild(canvas);
-	//canvas.focus();
 }
 
 Game.prototype.initAudio = function()
@@ -180,34 +187,37 @@ function onKeyPress(e)
 		ActionQueue[i]();
 	}*/
 	///////////////////////////////////////////
-	if (e.keyCode == 87 || e.keyCode == 38)
+	if (e.keyCode == 87 || e.keyCode == 38) // W or Up Arrow
 	{		
 		game.keys["up"] = true;
-		e.preventDefault();
 	}
-	else if(e.keyCode == 65 || e.keyCode == 37)
+	else if(e.keyCode == 65 || e.keyCode == 37) //A or Left Arrow
 	{
 		game.keys["left"] = true;
-		e.preventDefault();
 	}		
-	else if(e.keyCode == 68||e.keyCode == 39)
+	else if(e.keyCode == 68||e.keyCode == 39) //D or Right Arrow
 	{
 		game.keys["right"] = true;
-		e.preventDefault();
 	}
-	else if(e.keyCode == 83||e.keyCode == 40)
+	else if(e.keyCode == 83||e.keyCode == 40) //S or Back Arrow
 	{
 		game.keys["back"] = true;
-		e.preventDefault();
 	}
-	if(e.keyCode == 13)
+	else if(e.keyCode == 81) //Q
+	{
+		game.keys["Q"] = true;
+	}
+	else if(e.keyCode == 69) //E
+	{
+		game.keys["E"] = true;
+	}
+	if(e.keyCode == 13) //Enter
 	{
 		game.keys["enter"] = true;
-		e.preventDefault();
 	}
 	
 	//Pause and Unpause game.
-	else if(e.keyCode == 27)
+	else if(e.keyCode == 27) // Escape
 	{
 		if(game.gameState == game.states.Playing)
 		{
@@ -221,7 +231,7 @@ function onKeyPress(e)
 			game.gameState = game.states.Playing;
 		}
 	}
-	else if(e.keyCode == 32)
+	else if(e.keyCode == 32) // Spacebar
 	{
 		game.keys["space"] = true;
 	}
@@ -250,6 +260,14 @@ function onKeyUp(e)
 	else if(e.keyCode == 68||e.keyCode == 39)
 	{
 		game.keys["right"] = false;		
+	}
+	else if(e.keyCode == 81) //Q
+	{
+		game.keys["Q"] = false;
+	}
+	else if(e.keyCode == 69) //E
+	{
+		game.keys["E"] = false;
 	}
 	else if(e.keyCode == 13)
 	{
@@ -282,17 +300,25 @@ Game.prototype.reset = function()
 
 Game.prototype.gameLoop = function() 
 {	//Deals with all runtime events during gameplay
-	var curTime = (new Date).getTime();
+	game.timeElapsed = ((new Date).getTime() - game.curTime)/1000;
+	game.curTime = (new Date).getTime();
 	game.fps++;
-	if(curTime - game.secTime > 1000)
+	if(game.curTime - game.secTime > 1000)
 	{
-		//console.log(game.fps);
-		game.flashlight.timeLapse();
+		if(game.tutorial.complete == true)
+		{
+			game.flashlight.timeLapse();
+			game.player.Tick();
+		}
 		game.fpsPrint = game.fps;
 		game.fps = 0;
-		game.secTime = curTime;
+		game.secTime = game.curTime;
+		if(game.gameState!=game.states.Loss)
+		{
+			game.runTime++;
+		}
 	}
-	game.time = curTime;
+	game.time = game.curTime;
 	if(game.gameState == game.states.Menu) 
 	{		
 		if(game.keys["enter"] == true) //Pressing enter brings you to the highlighted option.
@@ -307,15 +333,30 @@ Game.prototype.gameLoop = function()
 			{
 				game.gameState = game.states.HowTo;
 			}
-			else if(game.menuSelect == 2) //Open up a pop-up to a survey about their gameplay experience.
+			else if(game.menuSelect == 2)
 			{
-				window.open("https://docs.google.com/forms/d/1pguXN83jDYY4XGJy-dkIahuRHwAHa5J-lFSLrR-lSCY/viewform");
+				connect();
+				game.gameState = game.states.ConnectToPip;
 			}
-			else if(game.menuSelect == 3) //Open a pop-up to a form to submit bug reports.
+			else if(game.menuSelect == 3) //Open up a pop-up to a survey about their gameplay experience.
+			{
+				window.open("https://docs.google.com/forms/d/1s6HgunDsnz19bqYRsqAT6a8YGprfFcNdP8hABfVj-4w/viewform");
+			}
+			else if(game.menuSelect == 4) //Open a pop-up to a form to submit bug reports.
 			{
 				window.open("http://goo.gl/forms/0jtjXSGRZ5");
 			}
 			game.keys["enter"] = false;			
+		}
+	}
+	else if(game.gameState == game.states.ConnectToPip)
+	{
+		if(game.keys["enter"] == true)
+		{
+			game.keys["enter"] = false;
+			game.reset();
+			game.gameState = game.states.Playing;
+			game.tutorial.displaying = true;
 		}
 	}
 	else if(game.tutorial.displaying == true)
@@ -325,15 +366,10 @@ Game.prototype.gameLoop = function()
 	}
 	else if(game.gameState == game.states.Playing) 
 	{		
-		if(game.sounds.gameLoop.playing == false && maps.GetPickUpCount() > 0)
+		if(game.sounds.gameLoop.playing == false && game.tutorial.complete == true)
 		{
 			//Play game loop sound if it's not already playing and the player has picked up 1 or more items.
 			playSound(game.sounds.gameLoop);
-		}		
-		if(maps.CheckWin())
-		{
-			//Check the win condition and display the win screen if appropriate 
-			game.gameState = game.states.Win;
 		}
 		else if(game.player.CheckLoss())
 		{
@@ -341,13 +377,13 @@ Game.prototype.gameLoop = function()
 			game.gameState = game.states.Loss;
 		}
 		//Run all the updates of game elements.
-		maps.checkTriggers(game.player.position, game.player.radius);
-		maps.PickUpItems(game.player.position, game.player.radius, game.sounds.zipper);	
+		maps.Update();
 		game.player.Update(game.keys, game.flashlight.enemySeen, game.enemy.attack, game.sounds.footstep);
 		game.flashlight.Update(game.player.getPos(), game.player.getDir(), game.player.sanity, game.keys["space"]);
 		game.cam.update(game.player.getX(), game.player.getY());
-		game.enemy.Update(game.player.getPos(), game.player.getDir(), game.player.sanity, maps.GetPickUpCount(), game.sounds.whisper, new Vector2(maps.mapWidth, maps.mapHeight));
-		game.audio.Update(game.player.getPos(), game.player.getDir(), game.enemy.getPos());			
+		game.enemy.Update(game.player.getPos(), game.player.getDir(), game.player.sanity, maps.GetPickUpCount(), game.sounds.whisper, game.timeElapsed);
+		game.audio.Update(game.player.getPos(), game.player.getDir(), game.enemy.getPos());
+		game.flashlight.shineFlashlight(maps.GetNearestWalls(game.player.position), game.enemy, game.cam.getX(), game.cam.getY());	
 	}
 	else if(game.gameState == game.states.Loss || game.gameState == game.states.Win || game.gameState == game.states.HowTo)
 	{
@@ -373,7 +409,7 @@ Game.prototype.gameLoop = function()
 Game.prototype.Draw = function() 
 {	//Draw game elements to the screen
 	//Clear canvas
-	canvasCtx.fillStyle = 'rgba(0,0,0,0.1)';	
+	canvasCtx.fillStyle = 'rgba(0,0,0,1)';	
 	canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 	if(game.gameState == game.states.Playing)
 	{
@@ -388,47 +424,56 @@ Game.prototype.Draw = function()
 			//Enemy draw method
 			this.enemy.Draw(this.cam.getX(), this.cam.getY());	
 			//Draw the flashlight if the the tutorial is complete.
-			if(this.tutorial.complete == true)
+			if(this.tutorial.complete == true && game.player.sanity > 0)
 			{
-				this.flashlight.shineFlashlight(maps.GetNearestWalls(this.player.position), this.enemy, this.cam.getX(), this.cam.getY());
+				this.flashlight.DrawFlashGrad();
+				this.flashlight.DrawDark();
 			}
 			maps.DrawLights(this.cam.getX(), this.cam.getY());
 			//Call player draw method
-			this.player.TestDraw(this.cam.getX(), this.cam.getY());		
-			//Call the map hud draw method
-			maps.DrawHUD();
+			this.player.Draw(this.cam.getX(), this.cam.getY());		
 		}		
 		canvasCtx.fillStyle = "purple";
 		canvasCtx.font = "30px Georgia";
+		/*/////Debug Draw///////////
 		canvasCtx.fillText(game.fpsPrint, 10, 30);
+		canvasCtx.fillText(this.enemy.path.length, 60, 30);
+		//////////////////////////*/
 	}
 	else if(game.gameState == game.states.Paused)
 	{
 		canvasCtx.fillStyle = "purple";
 		canvasCtx.font = "100px Georgia";
-		canvasCtx.fillText("Paused", canvas.width/2, canvas.height/2);
+		canvasCtx.fillText("Paused", canvas.width/4, canvas.height/2);
 	}
-	else if(game.gameState == game.states.Note)
+	else if(game.gameState == game.states.ConnectToPip)
 	{
-		IMAGE.NOTE.draw(new Vector2(0, 0));
+		game.PIP.Draw();		
 	}
 	else if(game.gameState == game.states.Win)
 	{
 		canvasCtx.fillStyle = "purple";
 		canvasCtx.font = "30px Georgia";
-		canvasCtx.fillText("End of the alpha build...", canvas.width/4, canvas.height/2 - 100);
-		canvasCtx.fillText("I guess that means you win...", canvas.width/4, canvas.height/2);
-		canvasCtx.fillText("...for now...", canvas.width/4, canvas.height/2 + 100);
+		canvasCtx.fillText("End of the alpha build...", canvas.width/2 , canvas.height/2 - 100);
+		canvasCtx.fillText("I guess that means you win...", canvas.width/2, canvas.height/2);
+		canvasCtx.fillText("...for now...", canvas.width/2, canvas.height/2 + 100);
 		
 	}
 	else if(game.gameState == game.states.Loss)
 	{
+		var deathby = "";
+		if(game.player.thirst <= 0)
+			deathby = "You Died Of Thirst";
+		else if(game.player.hunger<=0)
+			deathby = "You Died Of Hunger";
+		else if(game.player.sanity<=0)
+			deathby = "You Went Insane";
+		
 		canvasCtx.fillStyle = "purple";
 		canvasCtx.font = "30px Georgia";
-		canvasCtx.fillText("You went insane, your body was found lifeless on the street at 6:23a.m", canvas.width/4, canvas.height/2 - 200);
-		canvasCtx.fillText("by an office worker on their daily commute.", canvas.width/4, canvas.height/2 - 100);
-		canvasCtx.fillText("Assumed suicide.", canvas.width/4, canvas.height/2);
-		canvasCtx.fillText("You Lose.", canvas.width/24, canvas.height/2 + 100);
+		canvasCtx.fillText(deathby, canvas.width/2, canvas.height/2 - 200);
+		canvasCtx.fillText("Survival Time : ", canvas.width/2, canvas.height/2 - 100);
+		canvasCtx.fillText(game.runTime, canvas.width/2, canvas.height/2);
 	}
 	else if(game.gameState == game.states.Menu)
 	{
@@ -440,7 +485,7 @@ Game.prototype.Draw = function()
 			{
 				canvasCtx.fillStyle = "white";
 			}
-			canvasCtx.fillText(game.menuStates[i], GAMESIZE * 4, GAMESIZE * 3 + (GAMESIZE * 2 * i));			
+			canvasCtx.fillText(game.menuStates[i], GAMESIZE * 4, GAMESIZE * 3 + (GAMESIZE * i));		
 		}					
 	}
 	else if(game.gameState == game.states.HowTo)
@@ -448,10 +493,10 @@ Game.prototype.Draw = function()
 		canvasCtx.font = "20px Georgia";
 		canvasCtx.fillStyle = "purple";
 		canvasCtx.fillText("CONTROLS", canvas.width/2 - 350, canvas.height/2 - 250);
-		canvasCtx.fillText("Move Forward - W/Up Arrow", canvas.width/2 - 300, canvas.height/2 - 200);
-		canvasCtx.fillText("Turn Left - A/Left Arrow", canvas.width/2 - 300, canvas.height/2 - 150);
-		canvasCtx.fillText("Turn Right - D/Right Arrow", canvas.width/2 - 300, canvas. height/2 - 100);
-		canvasCtx.fillText("Space - Sprint", canvas.width/2 - 300, canvas. height/2 - 50);
+		canvasCtx.fillText("Move Forward - W", canvas.width/2 - 300, canvas.height/2 - 200);
+		canvasCtx.fillText("Turn - A/D", canvas.width/2 - 300, canvas.height/2 - 150);
+		canvasCtx.fillText("Switch Inventory - Q/E", canvas.width/2 - 300, canvas. height/2 - 100);
+		canvasCtx.fillText("Space - Use Item", canvas.width/2 - 300, canvas. height/2 - 50);
 		canvasCtx.fillText("Pause - Esc", canvas.width/2 - 300, canvas. height/2);
 		canvasCtx.fillText("INSTRUCTIONS", canvas.width/2 - 350, canvas.height/2 + 100);
 		canvasCtx.fillText("Search for the supplies", canvas.width/2 - 300, canvas.height/2 + 150);

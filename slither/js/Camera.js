@@ -27,7 +27,7 @@ Camera.prototype.update = function(x, y)
 	}
 	else
 	{
-		this.x = x - this.screenWidth/2;
+		this.x = Math.ceil(x - this.screenWidth/2);
 	}
 	//Lock Y value if at edge of map.
 	if(y + this.screenHeight/2 >= this.maxY)
@@ -40,7 +40,7 @@ Camera.prototype.update = function(x, y)
 	}
 	else
 	{
-		this.y = y - this.screenHeight/2;
+		this.y = Math.ceil(y - this.screenHeight/2);
 	}
 	
 }
