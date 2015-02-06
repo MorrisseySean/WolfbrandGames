@@ -305,7 +305,7 @@ Game.prototype.gameLoop = function()
 	game.fps++;
 	if(game.curTime - game.secTime > 1000)
 	{
-		if(game.tutorial.complete == true)
+		if(game.tutorial.complete == true && game.gameState == game.states.Playing)
 		{
 			game.flashlight.timeLapse();
 			game.player.Tick();
